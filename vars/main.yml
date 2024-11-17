@@ -1,0 +1,4 @@
+---
+odin_installer_url: https://raw.githubusercontent.com/romangg/debian-installer/ansible/installer.sh
+odin_installer_path: /tmp/odin-installer.sh
+odin_headless_b: "{{ odin_headless | bool }}"

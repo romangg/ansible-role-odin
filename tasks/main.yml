@@ -1,0 +1,53 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - cryptsetup
+      - debootstrap
+      - uuid-runtime
+      - btrfs-progs
+      - dosfstools
+      - parted
+      - systemd-timesyncd
+    update_cache: true
+
+- name: Read device information (always use unit when probing)
+  community.general.parted:
+    device: "{{ odin_disk }}"
+  register: disk_info
+- name: Check disk on partitions
+  ansible.builtin.fail:
+    msg: "Target Disk not empty. First wipe the disk with 'wipefs -a {{ odin_disk }}'."
+  when: (disk_info.partitions | length) != 0
+
+- name: Download installer script
+  ansible.builtin.get_url:
+    url: "{{ odin_installer_url }}"
+    dest: "{{ odin_installer_path }}"
+    mode: '0755'
+
+- name: Execute installer script
+  ansible.builtin.command: "bash {{ odin_installer_path }}"
+  changed_when: "installer_result.rc == 0"
+  register: installer_result
+  environment:
+    NON_INTERACTIVE: "yes"
+    HEADLESS: "{% if odin_headless_b %}yes{% endif %}"
+    DISK: "{{ odin_disk }}"
+    USERNAME: "{{ odin_username }}"
+    USER_FULL_NAME: "{{ odin_user_full_name }}"
+    USER_PASSWORD: "{{ odin_user_password }}"
+    ROOT_PASSWORD: "{{ odin_root_password }}"
+    LUKS_PASSWORD: "{{ odin_luks_password }}"
+    HOSTNAME: "{{ odin_hostname }}"
+    TIMEZONE: "{{ odin_timezone }}"
+    ENABLE_SWAP: "{{ odin_enable_swap }}"
+    SWAP_SIZE: "{{ odin_swap_size }}"
+    SSH_PUBLIC_KEY: "{{ odin_ssh_public_key }}"
+    AFTER_INSTALLED_CMD: "{{ odin_after_installed_cmd }}"
+
+- name: Store script output
+  ansible.builtin.copy:
+    dest: /var/log/odin-installer.log
+    mode: '0644'
+    content: "stdout:\n{{ installer_result.stdout }}\n\n=================\n\nstderr:\n{{ installer_result.stderr }}"

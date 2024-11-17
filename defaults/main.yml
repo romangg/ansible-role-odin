@@ -1,0 +1,24 @@
+---
+# activate server / deactivate workstation features
+odin_headless: true
+# required, needs to be wiped before
+odin_disk: "/dev/vda"
+# required, decrypts disk
+odin_luks_password: ""
+# if set, can login to root with password
+odin_root_password: ""
+# if set, user is created
+odin_username: ""
+odin_user_full_name: ""
+odin_user_password: ""
+odin_hostname: "debian"
+# path in /usr/share/zoneinfo
+odin_timezone: "UTC"
+# "partition", "file" or without swap empty string
+odin_enable_swap: "file"
+# swap size in GB
+odin_swap_size: 2
+# authorize ssh key on installed system, by default tries a common place on control node
+odin_ssh_public_key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+# command to run after install on live system
+odin_after_installed_cmd: ""
